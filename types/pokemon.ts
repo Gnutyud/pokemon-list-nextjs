@@ -11,6 +11,7 @@ export interface PokemonType {
 export interface PokemonWithDetails extends Pokemon {
   image: string;
   types: string[];
+  isLoadingImage: boolean;
 }
 
 export interface PokemonByType {

@@ -26,25 +26,21 @@ const PokemonList: React.FC = () => {
 
   const limit = 48;
 
-  // Fetch the first 1200 Pokémon and all types on initial load
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true);
       try {
-        // Fetch 1200 Pokémon
         const pokemonListData = await pokemonServices.getPokemonList({
           limit: 1200,
         });
-        console.log(pokemonListData);
-        setAllPokemon(pokemonListData.results); // Store all Pokémon in state
+        setAllPokemon(pokemonListData.results);
         setTotalResults(pokemonListData.results.length);
 
         // Fetch all pokemons by type
         const allTypes = await fetchAllPokemonsByType();
-        console.log("all types", allTypes);
         setAllPokemonsByType(allTypes);
 
-        // Fetch details for the first page (first 48 Pokémon)
+        // Fetch details for the first page
         fetchPokemonDetails(pokemonListData.results.slice(0, limit));
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -65,11 +61,10 @@ const PokemonList: React.FC = () => {
       );
 
       setTotalResults(filteredByTypes.length);
-      fetchPokemonDetails(filteredByTypes.slice(0, limit)); // Fetch details for the first 48 filtered Pokémon
+      fetchPokemonDetails(filteredByTypes.slice(0, limit));
     } else {
-      // If no filters, reset to all Pokémon
       setTotalResults(allPokemon.length);
-      fetchPokemonDetails(allPokemon.slice(0, limit)); // Fetch details for the first 48 Pokémon
+      fetchPokemonDetails(allPokemon.slice(0, limit));
     }
   }, [selectedTypes]);
 
@@ -90,6 +85,7 @@ const PokemonList: React.FC = () => {
             image:
               pokemonDetails.sprites.other["official-artwork"].front_default,
             types: types,
+            isLoadingImage: true,
           };
         })
       );
@@ -141,6 +137,16 @@ const PokemonList: React.FC = () => {
     }
   };
 
+  const handleImageLoad = (pokemonName: string) => {
+    setPokemonList((prevList) =>
+      prevList.map((pokemon) =>
+        pokemon.name === pokemonName
+          ? { ...pokemon, isLoadingImage: false }
+          : pokemon
+      )
+    );
+  };
+
   return (
     <div>
       <div className="mx-auto max-w-screen-xl">
@@ -175,28 +181,22 @@ const PokemonList: React.FC = () => {
         </div>
       )}
       <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        {isLoading ? (
-          <span>Loading...</span>
-        ) : (
+        {!isLoading &&
           pokemonList.map((pokemon) => (
             <div key={pokemon.name}>
               <div className="h-24 w-24 mx-auto">
-                {pokemon.image ? (
-                  <Image
-                    src={pokemon.image}
-                    alt={pokemon.name}
-                    width={100}
-                    height={100}
-                    placeholder="blur"
-                  />
-                ) : (
-                  <span>Loading...</span>
-                )}
+                {pokemon.isLoadingImage && <span>Loading...</span>}
+                <Image
+                  src={pokemon.image}
+                  alt={pokemon.name}
+                  width={100}
+                  height={100}
+                  onLoad={() => handleImageLoad(pokemon.name)}
+                />
               </div>
               <div className="text-center">{pokemon.name}</div>
             </div>
-          ))
-        )}
+          ))}
       </div>
 
       <div className="mt-8 flex justify-center">
