@@ -13,6 +13,7 @@ import { filterPokemonsByTypes } from "@/utils/pokemon";
 
 const PokemonList: React.FC = () => {
   const [allPokemon, setAllPokemon] = useState<Pokemon[]>([]);
+  const [filteredPokemon, setFilteredPokemon] = useState<Pokemon[]>([]);
   const [pokemonList, setPokemonList] = useState<PokemonWithDetails[]>([]);
   const [types, setTypes] = useState<PokemonType[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -34,6 +35,7 @@ const PokemonList: React.FC = () => {
           limit: 1200,
         });
         setAllPokemon(pokemonListData.results);
+        setFilteredPokemon(pokemonListData.results);
         setTotalResults(pokemonListData.results.length);
 
         // Fetch all pokemons by type
@@ -59,14 +61,27 @@ const PokemonList: React.FC = () => {
         allPokemonsByType,
         selectedTypes
       );
-
+      setFilteredPokemon(filteredByTypes);
       setTotalResults(filteredByTypes.length);
       fetchPokemonDetails(filteredByTypes.slice(0, limit));
     } else {
+      setFilteredPokemon(allPokemon);
       setTotalResults(allPokemon.length);
       fetchPokemonDetails(allPokemon.slice(0, limit));
     }
   }, [selectedTypes]);
+
+  // Handle pagination
+  useEffect(() => {
+    if (filteredPokemon.length > 0) {
+      const startIndex = (currentPage - 1) * limit;
+      const paginatedPokemon = filteredPokemon.slice(
+        startIndex,
+        startIndex + limit
+      );
+      fetchPokemonDetails(paginatedPokemon);
+    }
+  }, [currentPage, filteredPokemon]);
 
   const fetchPokemonDetails = async (pokemonSubset: Pokemon[]) => {
     setIsLoading(true);
